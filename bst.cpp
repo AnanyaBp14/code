@@ -1,90 +1,140 @@
 #include <iostream>
-#include <string>
 using namespace std;
 
-// Structure to represent an EV Charging Station
-struct ChargingStation {
-    int id;             // Station ID
-    double distance;    // Distance from a central point
-    string name;        // Station name
-    ChargingStation* left;
-    ChargingStation* right;
+// Node structure for BST
+struct BSTNode {
+    int slotID;             // Unique ID for the charging slot
+    bool isAvailable;       // Availability of the slot
+    BSTNode* left;          // Left child
+    BSTNode* right;         // Right child
 
-    ChargingStation(int id, double distance, string name)
-        : id(id), distance(distance), name(name), left(nullptr), right(nullptr) {}
+    BSTNode(int id) : slotID(id), isAvailable(true), left(nullptr), right(nullptr) {}
 };
 
-// Insert a new station into the BST
-ChargingStation* insert(ChargingStation* root, int id, double distance, string name) {
-    if (root == nullptr) {
-        return new ChargingStation(id, distance, name);
-    }
-    if (distance < root->distance) {
-        root->left = insert(root->left, id, distance, name);
-    } else {
-        root->right = insert(root->right, id, distance, name);
-    }
-    return root;
-}
+// Class for managing the BST
+class EVSlotBST {
+private:
+    BSTNode* root;
 
-// Search for the nearest station (minimum distance)
-ChargingStation* findNearest(ChargingStation* root) {
-    while (root && root->left != nullptr) {
-        root = root->left;
-    }
-    return root;
-}
+    // Helper function to insert a slot into the BST
+    BSTNode* insertSlot(BSTNode* node, int slotID) {
+        if (!node) return new BSTNode(slotID);
 
-// Search for a station by name
-ChargingStation* searchByName(ChargingStation* root, const string& name) {
-    if (root == nullptr || root->name == name) {
-        return root;
+        if (slotID < node->slotID) {
+            node->left = insertSlot(node->left, slotID);
+        } else if (slotID > node->slotID) {
+            node->right = insertSlot(node->right, slotID);
+        } else {
+            cout << "Slot with ID " << slotID << " already exists.\n";
+        }
+        return node;
     }
-    if (name < root->name) {
-        return searchByName(root->left, name);
-    } else {
-        return searchByName(root->right, name);
-    }
-}
 
-// In-order traversal to display all stations
-void inOrderTraversal(ChargingStation* root) {
-    if (root != nullptr) {
-        inOrderTraversal(root->left);
-        cout << "ID: " << root->id << ", Distance: " << root->distance
-             << ", Name: " << root->name << endl;
-        inOrderTraversal(root->right);
+    // Helper function to find a slot in the BST
+    BSTNode* findSlot(BSTNode* node, int slotID) {
+        if (!node || node->slotID == slotID) return node;
+
+        if (slotID < node->slotID) {
+            return findSlot(node->left, slotID);
+        } else {
+            return findSlot(node->right, slotID);
+        }
     }
-}
+
+    // Helper function to display the BST in-order
+    void displaySlots(BSTNode* node) {
+        if (!node) return;
+        displaySlots(node->left);
+        cout << "Slot ID: " << node->slotID
+             << " | Availability: " << (node->isAvailable ? "Available" : "Occupied") << endl;
+        displaySlots(node->right);
+    }
+
+public:
+    EVSlotBST() : root(nullptr) {}
+
+    // Insert a new charging slot
+    void addSlot(int slotID) {
+        root = insertSlot(root, slotID);
+        cout << "Slot " << slotID << " added successfully.\n";
+    }
+
+    // Allocate a slot to an EV
+    void allocateSlot(int slotID) {
+        BSTNode* slot = findSlot(root, slotID);
+        if (!slot) {
+            cout << "Slot with ID " << slotID << " does not exist.\n";
+            return;
+        }
+        if (slot->isAvailable) {
+            slot->isAvailable = false;
+            cout << "Slot " << slotID << " allocated successfully.\n";
+        } else {
+            cout << "Slot " << slotID << " is already occupied.\n";
+        }
+    }
+
+    // Deallocate a slot after use
+    void deallocateSlot(int slotID) {
+        BSTNode* slot = findSlot(root, slotID);
+        if (!slot) {
+            cout << "Slot with ID " << slotID << " does not exist.\n";
+            return;
+        }
+        if (!slot->isAvailable) {
+            slot->isAvailable = true;
+            cout << "Slot " << slotID << " deallocated successfully.\n";
+        } else {
+            cout << "Slot " << slotID << " is already available.\n";
+        }
+    }
+
+    // Display all slots in the system
+    void displaySlots() {
+        cout << "\nAll Charging Slots:\n";
+        displaySlots(root);
+    }
+};
 
 // Main function
 int main() {
-    ChargingStation* root = nullptr;
+    EVSlotBST evSlots;
+    int choice, slotID;
 
-    // Insert some sample charging stations
-    root = insert(root, 1, 2.5, "Downtown Charging");
-    root = insert(root, 2, 1.2, "Mall Charging Station");
-    root = insert(root, 3, 3.8, "Highway Charging Hub");
-    root = insert(root, 4, 0.8, "City Center Charging");
+    while (true) {
+        cout << "\nEV Charging Slot Management Menu:\n";
+        cout << "1. Add Charging Slot\n";
+        cout << "2. Allocate Slot to EV\n";
+        cout << "3. Deallocate Slot\n";
+        cout << "4. Display All Slots\n";
+        cout << "5. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-    cout << "All Charging Stations (sorted by distance):\n";
-    inOrderTraversal(root);
-
-    cout << "\nNearest Charging Station:\n";
-    ChargingStation* nearest = findNearest(root);
-    if (nearest) {
-        cout << "ID: " << nearest->id << ", Distance: " << nearest->distance
-             << ", Name: " << nearest->name << endl;
+        switch (choice) {
+        case 1:
+            cout << "Enter Slot ID to Add: ";
+            cin >> slotID;
+            evSlots.addSlot(slotID);
+            break;
+        case 2:
+            cout << "Enter Slot ID to Allocate: ";
+            cin >> slotID;
+            evSlots.allocateSlot(slotID);
+            break;
+        case 3:
+            cout << "Enter Slot ID to Deallocate: ";
+            cin >> slotID;
+            evSlots.deallocateSlot(slotID);
+            break;
+        case 4:
+            evSlots.displaySlots();
+            break;
+        case 5:
+            cout << "Exiting EV Charging Slot Management System. Goodbye!\n";
+            return 0;
+        default:
+            cout << "Invalid choice. Please try again.\n";
+        }
     }
-
-    cout << "\nSearch for 'Mall Charging Station':\n";
-    ChargingStation* searchResult = searchByName(root, "Mall Charging Station");
-    if (searchResult) {
-        cout << "ID: " << searchResult->id << ", Distance: " << searchResult->distance
-             << ", Name: " << searchResult->name << endl;
-    } else {
-        cout << "Station not found!\n";
-    }
-
-    return 0;
 }
