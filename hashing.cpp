@@ -1,90 +1,106 @@
 #include <iostream>
+#include <unordered_map>
 #include <string>
+#include <limits>  // To clear input buffer
+
 using namespace std;
 
-// Structure to represent an EV Charging Station
-struct ChargingStation {
-    int id;             // Station ID
-    double distance;    // Distance from a central point
-    string name;        // Station name
-    ChargingStation* left;
-    ChargingStation* right;
+// HashMap to store segment metadata
+unordered_map<int, string> segmentMetadata;
 
-    ChargingStation(int id, double distance, string name)
-        : id(id), distance(distance), name(name), left(nullptr), right(nullptr) {}
-};
+// Function to update segment metadata
+void updateMetadataHash(int segmentID, const string& name) {
+    segmentMetadata[segmentID] = name;
+    cout << "Metadata updated for segment " << segmentID << ": " << name << "\n";
+}
 
-// Insert a new station into the BST
-ChargingStation* insert(ChargingStation* root, int id, double distance, string name) {
-    if (root == nullptr) {
-        return new ChargingStation(id, distance, name);
-    }
-    if (distance < root->distance) {
-        root->left = insert(root->left, id, distance, name);
+// Function to retrieve segment metadata
+void getMetadataHash(int segmentID) {
+    if (segmentMetadata.find(segmentID) != segmentMetadata.end()) {
+        cout << "Segment " << segmentID << ": " << segmentMetadata[segmentID] << "\n";
     } else {
-        root->right = insert(root->right, id, distance, name);
+        cout << "Error: Segment ID " << segmentID << " not found!\n";
     }
-    return root;
 }
 
-// Search for the nearest station (minimum distance)
-ChargingStation* findNearest(ChargingStation* root) {
-    while (root && root->left != nullptr) {
-        root = root->left;
-    }
-    return root;
-}
-
-// Search for a station by name
-ChargingStation* searchByName(ChargingStation* root, const string& name) {
-    if (root == nullptr || root->name == name) {
-        return root;
-    }
-    if (name < root->name) {
-        return searchByName(root->left, name);
+// Function to display all metadata
+void displayMetadataHash() {
+    if (segmentMetadata.empty()) {
+        cout << "No metadata available to display.\n";
     } else {
-        return searchByName(root->right, name);
+        cout << "\nSegment Metadata (Hash):\n";
+        for (const auto& entry : segmentMetadata) {
+            cout << "Segment " << entry.first << ": " << entry.second << "\n";
+        }
     }
 }
 
-// In-order traversal to display all stations
-void inOrderTraversal(ChargingStation* root) {
-    if (root != nullptr) {
-        inOrderTraversal(root->left);
-        cout << "ID: " << root->id << ", Distance: " << root->distance
-             << ", Name: " << root->name << endl;
-        inOrderTraversal(root->right);
+// Function to handle user input for updating metadata
+void inputMetadata() {
+    int segmentID;
+    string name;
+    cout << "\nEnter segment ID to update: ";
+    while (!(cin >> segmentID)) {
+        cin.clear();  // clear the error flag
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');  // discard invalid input
+        cout << "Invalid input! Please enter a valid integer segment ID: ";
     }
+    cin.ignore(); // To ignore the newline character left in the buffer
+    cout << "Enter metadata (name) for segment " << segmentID << ": ";
+    getline(cin, name);
+
+    updateMetadataHash(segmentID, name);
 }
 
-// Main function
+// Function to handle the menu display and user choices
+void displayMenu() {
+    cout << "\nMenu:\n";
+    cout << "1. Update Segment Metadata\n";
+    cout << "2. Retrieve Segment Metadata\n";
+    cout << "3. Display All Segment Metadata\n";
+    cout << "4. Exit\n";
+    cout << "Enter your choice: ";
+}
+
+// Main function to drive the menu options
 int main() {
-    ChargingStation* root = nullptr;
+    int choice;
 
-    // Insert some sample charging stations
-    root = insert(root, 1, 2.5, "Downtown Charging");
-    root = insert(root, 2, 1.2, "Mall Charging Station");
-    root = insert(root, 3, 3.8, "Highway Charging Hub");
-    root = insert(root, 4, 0.8, "City Center Charging");
+    do {
+        displayMenu();
 
-    cout << "All Charging Stations (sorted by distance):\n";
-    inOrderTraversal(root);
+        // Input validation for menu choice
+        while (!(cin >> choice)) {
+            cin.clear();  // clear the error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');  // discard invalid input
+            cout << "Invalid input! Please enter a valid menu choice (1-4): ";
+        }
 
-    cout << "\nNearest Charging Station:\n";
-    ChargingStation* nearest = findNearest(root);
-    if (nearest) {
-        cout << "ID: " << nearest->id << ", Distance: " << nearest->distance
-             << ", Name: " << nearest->name << endl;
-    }
-
-    cout << "\nSearch for 'Mall Charging Station':\n";
-    ChargingStation* searchResult = searchByName(root, "Mall Charging Station");
-    if (searchResult) {
-        cout << "ID: " << searchResult->id << ", Distance: " << searchResult->distance
-             << ", Name: " << searchResult->name << endl;
-    } else {
-        cout << "Station not found!\n";
-    }
+        switch (choice) {
+            case 1:
+                inputMetadata();
+                break;
+            case 2: {
+                int segmentID;
+                cout << "Enter segment ID to retrieve metadata: ";
+                while (!(cin >> segmentID)) {
+                    cin.clear();  // clear the error flag
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');  // discard invalid input
+                    cout << "Invalid input! Please enter a valid segment ID: ";
+                }
+                getMetadataHash(segmentID);
+                break;
+            }
+            case 3:
+                displayMetadataHash();
+                break;
+            case 4:
+                cout << "Exiting program...\n";
+                break;
+            default:
+                cout << "Error: Invalid choice! Please try again.\n";
+        }
+    } while (choice != 4);  // Repeat until the user chooses to exit
 
     return 0;
 }
