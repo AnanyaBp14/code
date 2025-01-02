@@ -2,85 +2,97 @@
 #include <vector>
 using namespace std;
 
-// Structure to represent traffic data at an intersection
-struct TrafficData {
-    int intersectionID;  // Intersection ID
-    int vehicleCount;    // Number of vehicles at this intersection
-    double averageSpeed; // Average speed of vehicles at this intersection
-
-    TrafficData(int id, int count, double speed)
-        : intersectionID(id), vehicleCount(count), averageSpeed(speed) {}
-};
-
-class TrafficMonitor {
+class EVChargingArray {
 private:
-    vector<TrafficData> trafficArray; // Array of traffic data at different intersections
+    vector<bool> stationStatus; // Array to track station status: true = Free, false = Occupied
 
 public:
-    // Add traffic data for an intersection
-    void addTrafficData(int id, int vehicleCount, double averageSpeed) {
-        trafficArray.push_back(TrafficData(id, vehicleCount, averageSpeed));
+    // Constructor to initialize stations
+    EVChargingArray(int numStations) {
+        stationStatus.resize(numStations, true); // All stations are initially Free
+        cout << numStations << " stations initialized. All are Free.\n";
     }
 
-    // Update the traffic data for a specific intersection
-    void updateTrafficData(int intersectionID, int vehicleCount, double averageSpeed) {
-        for (auto& data : trafficArray) {
-            if (data.intersectionID == intersectionID) {
-                data.vehicleCount = vehicleCount;
-                data.averageSpeed = averageSpeed;
-                return;
+    // Mark a station as Occupied
+    void occupyStation(int stationID) {
+        if (isValidStation(stationID)) {
+            if (stationStatus[stationID]) {
+                stationStatus[stationID] = false;
+                cout << "Station " << stationID << " is now Occupied.\n";
+            } else {
+                cout << "Station " << stationID << " is already Occupied.\n";
             }
         }
-        cout << "Intersection ID not found!" << endl;
     }
 
-    // Get traffic data for a specific intersection
-    void getTrafficData(int intersectionID) {
-        for (const auto& data : trafficArray) {
-            if (data.intersectionID == intersectionID) {
-                cout << "Intersection ID: " << data.intersectionID << endl;
-                cout << "Vehicle Count: " << data.vehicleCount << endl;
-                cout << "Average Speed: " << data.averageSpeed << " km/h" << endl;
-                return;
+    // Mark a station as Free
+    void freeStation(int stationID) {
+        if (isValidStation(stationID)) {
+            if (!stationStatus[stationID]) {
+                stationStatus[stationID] = true;
+                cout << "Station " << stationID << " is now Free.\n";
+            } else {
+                cout << "Station " << stationID << " is already Free.\n";
             }
         }
-        cout << "Intersection ID not found!" << endl;
     }
 
-    // Display all traffic data
-    void displayAllTrafficData() {
-        if (trafficArray.empty()) {
-            cout << "No traffic data available!" << endl;
-            return;
+    // Display all station statuses
+    void displayStations() {
+        cout << "\nCharging Station Status:\n";
+        for (size_t i = 0; i < stationStatus.size(); ++i) {
+            cout << "Station " << i << ": " << (stationStatus[i] ? "Free" : "Occupied") << endl;
         }
-        for (const auto& data : trafficArray) {
-            cout << "Intersection ID: " << data.intersectionID << endl;
-            cout << "Vehicle Count: " << data.vehicleCount << endl;
-            cout << "Average Speed: " << data.averageSpeed << " km/h" << endl;
-            cout << "------------------------------" << endl;
+    }
+
+private:
+    // Check if a station ID is valid
+    bool isValidStation(int stationID) {
+        if (stationID < 0 || stationID >= stationStatus.size()) {
+            cout << "Invalid Station ID: " << stationID << ". Please enter a valid ID.\n";
+            return false;
         }
+        return true;
     }
 };
 
-// Main function to test the traffic monitoring system
+// Main function
 int main() {
-    TrafficMonitor monitor;
+    int numStations;
+    cout << "Enter the number of charging stations: ";
+    cin >> numStations;
 
-    // Add some traffic data
-    monitor.addTrafficData(101, 45, 30.5);  // Intersection 101, 45 vehicles, avg speed 30.5 km/h
-    monitor.addTrafficData(102, 30, 25.0);  // Intersection 102, 30 vehicles, avg speed 25.0 km/h
-    monitor.addTrafficData(103, 60, 35.0);  // Intersection 103, 60 vehicles, avg speed 35.0 km/h
+    EVChargingArray chargingStations(numStations);
+    int choice, stationID;
 
-    // Display all traffic data
-    cout << "All Traffic Data:\n";
-    monitor.displayAllTrafficData();
+    while (true) {
+        cout << "\nMenu:\n";
+        cout << "1. Occupy a Station\n";
+        cout << "2. Free a Station\n";
+        cout << "3. Display Station Status\n";
+        cout << "4. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-    // Update traffic data for a specific intersection
-    monitor.updateTrafficData(102, 40, 28.0);  // Intersection 102, 40 vehicles, avg speed 28.0 km/h
-
-    // Get traffic data for a specific intersection
-    cout << "\nUpdated Traffic Data for Intersection 102:\n";
-    monitor.getTrafficData(102);
-
-    return 0;
+        switch (choice) {
+        case 1:
+            cout << "Enter Station ID to Occupy: ";
+            cin >> stationID;
+            chargingStations.occupyStation(stationID);
+            break;
+        case 2:
+            cout << "Enter Station ID to Free: ";
+            cin >> stationID;
+            chargingStations.freeStation(stationID);
+            break;
+        case 3:
+            chargingStations.displayStations();
+            break;
+        case 4:
+            cout << "Exiting the system. Goodbye!\n";
+            return 0;
+        default:
+            cout << "Invalid choice. Please try again.\n";
+        }
+    }
 }
